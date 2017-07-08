@@ -1,0 +1,8 @@
+server:
+  contextPath: /ms-jira
+  port: ${port:8989}
+
+jira:
+  projects: RECON
+  developers: zengqinggui
+  testers: zhangcheng,zhanglin
