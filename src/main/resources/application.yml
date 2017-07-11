@@ -5,4 +5,9 @@ server:
 jira:
   projects: RECON,HMS,HMSMS,PDS,YYDS,PLUGIN
   developers: huangaoxin,ouyangbo,zengqinggui,hanchonglin,zhengxiang,huangyibo,zhangyizhi,zhudiyang,gongjunqing,zhuminghao,wangbingfu
-  testers: zhangcheng,zhanglin
+  testers: zhangcheng,zhanglin,liufanghua
+
+spring:
+  mvc:
+    async:
+      request-timeout: 60000
