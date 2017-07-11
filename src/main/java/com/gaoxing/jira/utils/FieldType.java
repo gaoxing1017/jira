@@ -9,4 +9,8 @@ public class FieldType {
 
     public static String DEVELOPER = "customfield_10001";
 
+    public static String IS_ONLINE_BUG = "customfield_13529";
+
+    public static String RETURN_TIME= "customfield_13400";
+
 }
