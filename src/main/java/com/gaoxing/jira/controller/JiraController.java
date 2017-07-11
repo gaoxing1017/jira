@@ -50,7 +50,6 @@ public class JiraController {
             BasicCredentials creds = new BasicCredentials("gaoxing", "happy891017");
             JiraClient jira = new JiraClient("http://j.quyiyuan.com/", creds);
 
-
 //            Stream.of(developers.split(",")).forEach(e-> getDeveloperData(e,startTime,endTime,results));
             for (String developer : developers.split(",")) {
                 DeveloperDto developerDto = new DeveloperDto();
