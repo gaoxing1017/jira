@@ -5,12 +5,12 @@ import com.gaoxing.jira.service.JiraService;
 import com.gaoxing.jira.utils.DateUtil;
 import com.gaoxing.jira.utils.FieldType;
 import com.gaoxing.jira.utils.JiraUtil;
-import net.rcarz.jiraclient.Issue;
-import net.rcarz.jiraclient.JiraException;
+import net.rcarz.jiraclient.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,11 +20,17 @@ import java.util.stream.Collectors;
  * jira serviceImpl
  */
 @Service("JiraService")
-public class JiraServiceImpl implements JiraService{
+public class JiraServiceImpl implements JiraService {
 
 
     @Value("${jira.projects}")
     private String projects;
+
+    @Value("${jira.testers}")
+    private String testers;
+
+    @Value("${jira.testProjects}")
+    private String testProjects;
 
     public void getStoryPointData(String developer, String startTime, String endTime, DeveloperDto developerDto) {
         String searchSql = "project in (" + projects + ") AND status = Closed AND resolution = 完成" +
@@ -55,7 +61,7 @@ public class JiraServiceImpl implements JiraService{
         }
     }
 
-    public void getBugData(String developer,String startTime,String endTime,DeveloperDto developerDto) {
+    public void getBugData(String developer, String startTime, String endTime, DeveloperDto developerDto) {
         String searchSql = "project in (" + projects + ") AND issuetype = Bug" +
                 " AND created >=" + startTime +
                 " AND created <=" + endTime +
@@ -82,12 +88,12 @@ public class JiraServiceImpl implements JiraService{
             developerDto.setMainBugCount(mainBugs.size());
             developerDto.setOnlineBugs(onlineBugs);
             developerDto.setOnlineBugCount(onlineBugs.size());
-        }catch (JiraException jiraException) {
+        } catch (JiraException jiraException) {
             System.console().printf(jiraException.toString());
         }
     }
 
-    public void getReturnData(String developer,String startTime,String endTime,DeveloperDto developerDto) {
+    public void getReturnData(String developer, String startTime, String endTime, DeveloperDto developerDto) {
         String searchSql = "project in (" + projects + ")" +
                 " AND resolved >=" + startTime +
                 " AND resolved <=" + endTime +
@@ -99,12 +105,12 @@ public class JiraServiceImpl implements JiraService{
             Double returnTime = returnIssues.issues.parallelStream().mapToDouble(e -> Double.parseDouble(e.getField(FieldType.RETURN_TIME).toString())).sum();
             developerDto.setReturnList(returnList);
             developerDto.setReturnTime(returnTime);
-        }catch (JiraException jiraException) {
+        } catch (JiraException jiraException) {
             System.console().printf(jiraException.toString());
         }
     }
 
-    public void getDelayData(String developer,String startTime,String endTime, DeveloperDto developerDto) {
+    public void getDelayData(String developer, String startTime, String endTime, DeveloperDto developerDto) {
         String searchSql = "project in (" + projects + ") AND status = Closed AND resolution = 完成" +
                 " AND due >=" + startTime +
                 " AND due <=" + endTime +
@@ -127,8 +133,182 @@ public class JiraServiceImpl implements JiraService{
             developerDto.setDelay7days(delay7days);
             developerDto.setDelay7dayCount(delay7days.size());
             developerDto.setDelayDays(delayDay * 1.0d / DateUtil.oneDay);
-        }catch (JiraException jiraException) {
+        } catch (JiraException jiraException) {
             System.console().printf(jiraException.toString());
         }
+    }
+
+    public Map<String, List<String>> getTesterReturnData(String startTime, String endTime) {
+        String searchSql = "project in (" + projects + ")" +
+                " AND resolved >=" + startTime +
+                " AND resolved <=" + endTime +
+                " AND 退回次数 >= 1";
+        Map<String, List<String>> results = new HashMap<>();
+        Issue.SearchResult returnIssues = new Issue.SearchResult();
+        try {
+            returnIssues = JiraUtil.getJiraClient().searchIssues(searchSql, FieldType.REPORTER, 1000);
+        } catch (JiraException jiraException) {
+            System.console().printf(jiraException.toString());
+        }
+        returnIssues.issues.forEach(issue -> {
+            try {
+                Issue issueDetail = JiraUtil.getJiraClient().getIssue(issue.getKey(), FieldType.REPORTER, "changelog");
+                List<ChangeLogEntry> changeLogEntry = issueDetail.getChangeLog().getEntries();
+                changeLogEntry.forEach(changeLog -> {
+                    changeLog.getItems().forEach(item -> {
+                        if ("退回次数".equals(item.getField())) {
+                            List<String> returnList = results.get(changeLog.getAuthor().getName());
+                            if (returnList == null) {
+                                List<String> value = new ArrayList<>();
+                                value.add(issueDetail.getKey());
+                                results.put(changeLog.getAuthor().getName(), value);
+                            } else {
+                                returnList.add(issueDetail.getKey());
+                            }
+                        }
+                    });
+                });
+            } catch (JiraException jiraException) {
+                System.console().printf(jiraException.toString());
+            }
+        });
+
+        return results;
+    }
+
+    public Map<String, List<String>> getTestCaseData(String startTime, String endTime) {
+        String searchSql = "project in (" + testProjects + ")" +
+                " AND issuetype = 测试" +
+                " AND created >=" + startTime +
+                " AND created <=" + endTime;
+        return getIssueListByReporter(executeSearchSql(searchSql,FieldType.REPORTER));
+    }
+
+    public Map<String, List<String>> getAutoTestCase(String startTime, String endTime) {
+        return new HashMap<>();
+    }
+
+    public Map<String, List<String>> getTesterOnlineBugData(String startTime, String endTime) {
+        String searchSql = "project in (" + projects + ")" +
+                " AND issuetype = Bug" +
+                " AND 测试环境 in (STG环境,灰度环境,生产环境,STG)"+
+                " AND status !=\"reject closed\""+
+                " AND created >=" + startTime +
+                " AND created <=" + endTime;
+        return getIssueListByProject(executeSearchSql(searchSql,FieldType.PROJECT));
+    }
+
+    public Map<String, List<String>> getBugData(String startTime, String endTime) {
+        String searchSql = "project in (" + projects + ")" +
+                " AND issuetype = Bug" +
+                " AND status !=\"reject closed\""+
+                " AND created >=" + startTime +
+                " AND created <=" + endTime;
+        return getIssueListByReporter(executeSearchSql(searchSql,FieldType.REPORTER));
+    }
+
+    public Map<String,List<String>> getTestCaseExecuteData(String startTime,String endTime) {
+        String searchSql = "project in (" + projects + ") AND status = Closed AND resolution = 完成" +
+                " AND resolved >=" + startTime +
+                " AND resolved <=" + endTime;
+        Issue.SearchResult testCaseExecute = executeSearchSql(searchSql, FieldType.ISSUE_LINKS);
+
+        Map<String,Issue> issueMap= new HashMap<>();
+
+        testCaseExecute.issues.forEach(issue -> {
+            Issue issueDetail = getIssue(issue.getKey(), FieldType.ISSUE_LINKS);
+            if (issueDetail != null) {
+                List<ChangeLogEntry> changeLogs = issueDetail.getChangeLog().getEntries();
+                changeLogs.forEach(changeLog -> {
+                    changeLog.getItems().forEach(item -> {
+                        if ("status".equals(item.getField()) && "Testing".equals(item.getFromString())) {
+                            issueMap.put(changeLog.getAuthor().getName(),issueDetail);
+                        }
+                    });
+                });
+            }
+            for (Map.Entry<String, Issue> entry : issueMap.entrySet()) {
+//                entry.ge
+            }
+        });
+        return new HashMap<>();
+    }
+
+//        issue.getIssueLinks().forEach(IssueLink->{
+//            Object obj=IssueLink.getOutwardIssue().getField(FieldType.ISSUE_TYPE);
+//            IssueType issueType =(IssueType)obj;
+//            if("测试".equals(issueType.getName())){
+//                return true;
+//            }
+//        });
+    /**
+     * 执行jira搜索语句
+     * @param searchSql
+     * @return
+     */
+    private Issue.SearchResult executeSearchSql(String searchSql,String includedFields){
+        Issue.SearchResult searchResult=new Issue.SearchResult();
+        try {
+            searchResult = JiraUtil.getJiraClient().searchIssues(searchSql,includedFields,1000);
+        } catch (JiraException jiraException) {
+            System.console().printf(jiraException.toString());
+        }
+        return searchResult;
+    }
+
+    /**
+     * 获取issue明细
+     * @param key
+     * @param includedFields
+     * @return
+     */
+    private Issue getIssue(String key,String includedFields){
+        Issue issue=null;
+        try {
+            issue = JiraUtil.getJiraClient().getIssue(key,includedFields,"changelog");
+        } catch (JiraException jiraException) {
+            System.console().printf(jiraException.toString());
+        }
+        return issue;
+    }
+
+    /**
+     * 根据报告人进行任务统计
+     * @param searchResult
+     * @return
+     */
+    private Map<String, List<String>> getIssueListByReporter(Issue.SearchResult searchResult){
+        Map<String, List<String>> results = new HashMap<>();
+        searchResult.issues.forEach(issue -> {
+            List<String> valueList = results.get(issue.getReporter().getName());
+            if (valueList == null) {
+                List<String> value = new ArrayList<>();
+                value.add(issue.getKey());
+                results.put(issue.getReporter().getName(), value);
+            } else {
+                valueList.add(issue.getKey());
+            }
+        });
+        return results;
+    }
+
+    /**
+     * 根据项目进行任务统计
+     * @param searchResult
+     * @return
+     */
+    private Map<String, List<String>> getIssueListByProject(Issue.SearchResult searchResult){
+        Map<String, List<String>> results = new HashMap<>();
+        searchResult.issues.forEach(issue -> {
+            List<String> valueList = results.get(issue.getProject().getKey());
+            if (valueList == null) {
+                List<String> value = new ArrayList<>();
+                value.add(issue.getKey());
+                results.put(issue.getProject().getKey(), value);
+            } else {
+                valueList.add(issue.getKey());
+            }
+        });
+        return results;
     }
 }

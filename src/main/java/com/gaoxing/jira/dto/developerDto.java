@@ -6,6 +6,7 @@ import java.util.List;
 
 /**
  * Created by gaoxing on 2017/7/10.
+ *
  */
 @Data
 public class DeveloperDto {

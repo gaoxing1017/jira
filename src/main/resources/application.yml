@@ -5,7 +5,8 @@ server:
 jira:
   projects: RECON,HMS,HMSMS,PDS,YYDS,PLUGIN
   developers: huangaoxin,ouyangbo,zengqinggui,hanchonglin,zhengxiang,huangyibo,zhangyizhi,zhudiyang,gongjunqing,zhuminghao,wangbingfu
-  testers: zhangcheng,zhanglin,liufanghua
+  testers: zhangchen_dev,zhangling,liufanghua
+  testProjects: FJZLTEST
 
 spring:
   mvc:

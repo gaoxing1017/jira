@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 /**
@@ -30,6 +31,8 @@ public class JiraController {
     @Value("${jira.testers}")
     private String testers;
 
+    @Value("${jira.projects}")
+    private String projects;
 
     @Autowired
     private JiraService jiraService;
@@ -69,13 +72,59 @@ public class JiraController {
 
             List<TesterDto> results = new ArrayList<>();
             Response<List<TesterDto>> response = new Response<>(ResponseStatus.SUCCESS, "执行成功", null);
-
+            for(String tester : testers.split(",")){
+                TesterDto testerDto=new TesterDto();
+                testerDto.setName(tester);
+                results.add(testerDto);
+            }
             //TODO 统计测试人员退回次数
-
+            Map<String,List<String>> returnData=jiraService.getTesterReturnData(startTime,endTime);
             //TODO 统计测试用例
-
+            Map<String,List<String>> testCaseData=jiraService.getTestCaseData(startTime,endTime);
+            //TODO 发现bug数
+            Map<String,List<String>> bugData=jiraService.getBugData(startTime,endTime);
+            //TODO 统计线上bug数
+            Map<String,List<String>> onlineBugData=jiraService.getTesterOnlineBugData(startTime,endTime);
             //TODO 统计自动化测试用例
-
+            results.forEach(testerDto -> {
+                List<String> returnList= returnData.get(testerDto.getName());
+                if(returnList==null) {
+                    testerDto.setReturnTime(0);
+                    testerDto.setReturnList(new ArrayList<>());
+                }else{
+                    testerDto.setReturnTime(returnList.size());
+                    testerDto.setReturnList(returnList);
+                }
+                List<String> testCaseList= testCaseData.get(testerDto.getName());
+                if(returnList==null) {
+                    testerDto.setTestCase(0);
+                    testerDto.setTestCaseList(new ArrayList<>());
+                }else{
+                    testerDto.setTestCase(testCaseList.size());
+                    testerDto.setTestCaseList(testCaseList);
+                }
+                List<String> bugList=bugData.get(testerDto.getName());
+                if(bugList==null) {
+                    testerDto.setFindBugCount(0);
+                    testerDto.setBugList(new ArrayList<>());
+                }else{
+                    testerDto.setFindBugCount(bugList.size());
+                    testerDto.setBugList(bugList);
+                }
+                List<String> onlineBugList=new ArrayList<>();
+                if("zhangling".equals(testerDto.getName())) {
+                    onlineBugList = onlineBugData.get("HMS");
+                }else if("zhangchen_dev".equals(testerDto.getName())){
+                    onlineBugList = onlineBugData.get("RECON");
+                }
+                if(onlineBugList==null) {
+                    testerDto.setOnlineBugCount(0);
+                    testerDto.setOnlineBugList(new ArrayList<>());
+                }else{
+                    testerDto.setOnlineBugCount(onlineBugList.size());
+                    testerDto.setOnlineBugList(onlineBugList);
+                }
+            });
             response.setData(results);
             return response;
         };
