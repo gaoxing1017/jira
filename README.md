@@ -1,5 +1,5 @@
 # jira
-用于jira任务统计,spring boot项目
+用于jira任务统计,spring boot项目,集成jira-client.
 
 
 ###开发人员绩效数据统计
