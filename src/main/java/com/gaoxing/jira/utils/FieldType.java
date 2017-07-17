@@ -21,4 +21,6 @@ public class FieldType {
 
     public static String ISSUE_TYPE = "issuetype";
 
+    public static String TEST_LINK_ISSUE = "11502";
+
 }

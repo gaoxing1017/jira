@@ -213,8 +213,10 @@ public class JiraServiceImpl implements JiraService {
                 " AND resolved <=" + endTime;
         Issue.SearchResult testCaseExecute = executeSearchSql(searchSql, FieldType.ISSUE_LINKS);
 
-        Map<String,Issue> issueMap= new HashMap<>();
-
+        Map<String,List<String>> issueMap= new HashMap<>();
+        for(String tester : testers.split(",")){
+            issueMap.put(tester,new ArrayList<>());
+        }
         testCaseExecute.issues.forEach(issue -> {
             Issue issueDetail = getIssue(issue.getKey(), FieldType.ISSUE_LINKS);
             if (issueDetail != null) {
@@ -222,25 +224,20 @@ public class JiraServiceImpl implements JiraService {
                 changeLogs.forEach(changeLog -> {
                     changeLog.getItems().forEach(item -> {
                         if ("status".equals(item.getField()) && "Testing".equals(item.getFromString())) {
-                            issueMap.put(changeLog.getAuthor().getName(),issueDetail);
+                            issueDetail.getIssueLinks().forEach(issueLink -> {
+                                if (issueLink.getOutwardIssue() != null &&
+                                    FieldType.TEST_LINK_ISSUE.equals(issueLink.getOutwardIssue().getIssueType().getId())) {
+                                    issueMap.get(changeLog.getAuthor().getName()).add(issueLink.getOutwardIssue().getKey());
+                                }
+                            });
                         }
                     });
                 });
             }
-            for (Map.Entry<String, Issue> entry : issueMap.entrySet()) {
-//                entry.ge
-            }
         });
-        return new HashMap<>();
+        return issueMap;
     }
 
-//        issue.getIssueLinks().forEach(IssueLink->{
-//            Object obj=IssueLink.getOutwardIssue().getField(FieldType.ISSUE_TYPE);
-//            IssueType issueType =(IssueType)obj;
-//            if("测试".equals(issueType.getName())){
-//                return true;
-//            }
-//        });
     /**
      * 执行jira搜索语句
      * @param searchSql

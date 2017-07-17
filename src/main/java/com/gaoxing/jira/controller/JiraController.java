@@ -77,53 +77,60 @@ public class JiraController {
                 testerDto.setName(tester);
                 results.add(testerDto);
             }
-            //TODO 统计测试人员退回次数
+            //统计测试人员退回次数
             Map<String,List<String>> returnData=jiraService.getTesterReturnData(startTime,endTime);
-            //TODO 统计测试用例
+            //统计测试用例
             Map<String,List<String>> testCaseData=jiraService.getTestCaseData(startTime,endTime);
-            //TODO 发现bug数
+            //发现bug数
             Map<String,List<String>> bugData=jiraService.getBugData(startTime,endTime);
-            //TODO 统计线上bug数
+            //统计线上bug数
             Map<String,List<String>> onlineBugData=jiraService.getTesterOnlineBugData(startTime,endTime);
+            //统计关联测试用例数据
+            Map<String,List<String>> executeData=jiraService.getTestCaseExecuteData(startTime,endTime);
             //TODO 统计自动化测试用例
+
+            //填充统计数据
             results.forEach(testerDto -> {
-                List<String> returnList= returnData.get(testerDto.getName());
-                if(returnList==null) {
+                List<String> returnList = returnData.get(testerDto.getName());
+                if (returnList == null) {
                     testerDto.setReturnTime(0);
                     testerDto.setReturnList(new ArrayList<>());
-                }else{
+                } else {
                     testerDto.setReturnTime(returnList.size());
                     testerDto.setReturnList(returnList);
                 }
-                List<String> testCaseList= testCaseData.get(testerDto.getName());
-                if(returnList==null) {
+                List<String> testCaseList = testCaseData.get(testerDto.getName());
+                if (returnList == null) {
                     testerDto.setTestCase(0);
                     testerDto.setTestCaseList(new ArrayList<>());
-                }else{
+                } else {
                     testerDto.setTestCase(testCaseList.size());
                     testerDto.setTestCaseList(testCaseList);
                 }
-                List<String> bugList=bugData.get(testerDto.getName());
-                if(bugList==null) {
+                List<String> bugList = bugData.get(testerDto.getName());
+                if (bugList == null) {
                     testerDto.setFindBugCount(0);
                     testerDto.setBugList(new ArrayList<>());
-                }else{
+                } else {
                     testerDto.setFindBugCount(bugList.size());
                     testerDto.setBugList(bugList);
                 }
-                List<String> onlineBugList=new ArrayList<>();
-                if("zhangling".equals(testerDto.getName())) {
+                List<String> onlineBugList = new ArrayList<>();
+                if ("zhangling".equals(testerDto.getName())) {
                     onlineBugList = onlineBugData.get("HMS");
-                }else if("zhangchen_dev".equals(testerDto.getName())){
+                } else if ("zhangchen_dev".equals(testerDto.getName())) {
                     onlineBugList = onlineBugData.get("RECON");
                 }
-                if(onlineBugList==null) {
+                if (onlineBugList == null) {
                     testerDto.setOnlineBugCount(0);
                     testerDto.setOnlineBugList(new ArrayList<>());
-                }else{
+                } else {
                     testerDto.setOnlineBugCount(onlineBugList.size());
                     testerDto.setOnlineBugList(onlineBugList);
                 }
+                List<String> testCaseExecuteList = executeData.get(testerDto.getName());
+                testerDto.setTestCaseExecuteTime(testCaseExecuteList.size());
+                testerDto.setTestCaseExecuteList(testCaseExecuteList);
             });
             response.setData(results);
             return response;
