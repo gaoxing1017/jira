@@ -51,7 +51,9 @@ public class JiraServiceImpl implements JiraService {
                     developerDto.getSubTasks().add(subIssue.getKey());
                     Issue subTask = JiraUtil.getJiraClient().getIssue(subIssue.getKey());
                     if (!developer.equals(subTask.getField(FieldType.DEVELOPER).toString())) {
-                        storyPoints -= Double.parseDouble(subTask.getField(FieldType.STORY_POINT).toString());
+                        if(!"null".equals(subTask.getField(FieldType.STORY_POINT).toString())) {
+                            storyPoints -= Double.parseDouble(subTask.getField(FieldType.STORY_POINT).toString());
+                        }
                     }
                 }
             }
@@ -65,6 +67,7 @@ public class JiraServiceImpl implements JiraService {
         String searchSql = "project in (" + projects + ") AND issuetype = Bug" +
                 " AND created >=" + startTime +
                 " AND created <=" + endTime +
+                " AND status != \"reject closed\""+
                 " AND 开发人员 in (" + developer + ")" +
                 " ORDER BY priority DESC";
         try {
@@ -76,6 +79,10 @@ public class JiraServiceImpl implements JiraService {
             List<String> mainBugs = new ArrayList<>();
             List<String> onlineBugs = new ArrayList<>();
             for (Issue bugIssue : bugResult.issues) {
+                String storyPoint = bugIssue.getField(FieldType.STORY_POINT).toString();
+                if(!"null".equals(storyPoint) && Double.parseDouble(storyPoint)>0){
+                    continue;
+                }
                 //优先级由紧急->微小: 1->5
                 if (3 >= Integer.parseInt(bugIssue.getPriority().getId())) {
                     mainBugs.add(bugIssue.getKey());
