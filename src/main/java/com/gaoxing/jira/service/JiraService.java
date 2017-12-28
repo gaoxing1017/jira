@@ -1,6 +1,7 @@
 package com.gaoxing.jira.service;
 
 import com.gaoxing.jira.dto.DeveloperDto;
+import com.gaoxing.jira.dto.TestTimeDto;
 
 import java.util.List;
 import java.util.Map;
@@ -90,5 +91,13 @@ public interface JiraService {
      * @return
      */
     Map<String,List<String>> getTestCaseExecuteData(String startTime,String endTime);
+
+    /**
+     * 获取测试时间数据
+     * @param startTime
+     * @param endTime
+     * @return
+     */
+    List<TestTimeDto> getTestTimeData(String startTime, String endTime);
 
 }

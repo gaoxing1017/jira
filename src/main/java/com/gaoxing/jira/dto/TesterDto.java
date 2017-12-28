@@ -19,7 +19,7 @@ public class TesterDto {
     /**
      * 测试用例执行次数
      */
-    Integer testCaseExecuteTime;
+    Integer testCaseExecuteCount;
 
     /**
      * 编写测试用例数
@@ -29,7 +29,7 @@ public class TesterDto {
     /**
      * 任务打回次数
      */
-    Integer returnTime;
+    Integer returnCount;
 
     /**
      * 线上bug数
@@ -40,6 +40,21 @@ public class TesterDto {
      * 发现bug数
      */
     Integer findBugCount;
+
+    /**
+     * 测试平均时长(h)
+     */
+    Integer testAVTime;
+
+    /**
+     * 测试总时长(h)
+     */
+    Integer testTotalTime;
+
+    /**
+     * 测试任务数量
+     */
+    Integer testCount;
 
     /**
      * bug列表
@@ -66,5 +81,10 @@ public class TesterDto {
      */
     List<String> testCaseExecuteList;
 
+
+    /**
+     * 测试时间明细
+     */
+    List<IssueTimeDto> testTimeList;
 
 }

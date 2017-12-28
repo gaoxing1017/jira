@@ -1,6 +1,8 @@
 package com.gaoxing.jira.service.impl;
 
 import com.gaoxing.jira.dto.DeveloperDto;
+import com.gaoxing.jira.dto.IssueTimeDto;
+import com.gaoxing.jira.dto.TestTimeDto;
 import com.gaoxing.jira.service.JiraService;
 import com.gaoxing.jira.utils.DateUtil;
 import com.gaoxing.jira.utils.FieldType;
@@ -33,7 +35,7 @@ public class JiraServiceImpl implements JiraService {
     private String testProjects;
 
     public void getStoryPointData(String developer, String startTime, String endTime, DeveloperDto developerDto) {
-        String searchSql = "project in (" + projects + ") AND status = Closed AND resolution = 完成" +
+        String searchSql = "project in (" + projects + ") AND status = Closed AND resolution in (完成,阶段性完成)" +
                 " AND resolved >=" + startTime +
                 " AND resolved <=" + endTime +
                 " AND \"Story Points\" > 0" +
@@ -44,17 +46,17 @@ public class JiraServiceImpl implements JiraService {
             double storyPoints = storyResult.issues.stream()
                     .mapToDouble(e -> Double.parseDouble(e.getField(FieldType.STORY_POINT).toString()))
                     .sum();
-            //扣除分给其余人员的子任务故事点
+            //扣除子任务故事点
             List<Issue> hasSubTasks = storyResult.issues.parallelStream().filter(e -> !e.getSubtasks().isEmpty()).collect(Collectors.toList());
             for (Issue issue : hasSubTasks) {
                 for (Issue subIssue : issue.getSubtasks()) {
                     developerDto.getSubTasks().add(subIssue.getKey());
                     Issue subTask = JiraUtil.getJiraClient().getIssue(subIssue.getKey());
-                    if (!developer.equals(subTask.getField(FieldType.DEVELOPER).toString())) {
+//                    if (!developer.equals(subTask.getField(FieldType.DEVELOPER).toString())) {
                         if(!"null".equals(subTask.getField(FieldType.STORY_POINT).toString())) {
                             storyPoints -= Double.parseDouble(subTask.getField(FieldType.STORY_POINT).toString());
                         }
-                    }
+//                    }
                 }
             }
             developerDto.setStoryPoints(storyPoints);
@@ -214,6 +216,47 @@ public class JiraServiceImpl implements JiraService {
         return getIssueListByReporter(executeSearchSql(searchSql,FieldType.REPORTER));
     }
 
+    public List<TestTimeDto> getTestTimeData(String startTime,String endTime){
+        List<TestTimeDto> testTimeData =new ArrayList<>();
+        for(String tester : testers.split(",")){
+            TestTimeDto testTimeDto =new TestTimeDto();
+            testTimeDto.setName(tester);
+            testTimeDto.setTestTimeList(new ArrayList<>());
+            testTimeData.add(testTimeDto);
+        }
+        String searchSql = "project in (" + projects + ") AND status = Closed AND resolution = 完成" +
+                " AND resolved >=" + startTime +
+                " AND resolved <=" + endTime;
+
+        Issue.SearchResult testIssues = executeSearchSql(searchSql,FieldType.REPORTER);
+        testIssues.issues.forEach(issue -> {
+            Issue issueDetail = getIssue(issue.getKey(), FieldType.REPORTER);
+            if (issueDetail != null) {
+                List<ChangeLogEntry> changeLogs = issueDetail.getChangeLog().getEntries();
+                IssueTimeDto issueTimeDto =new IssueTimeDto();
+                issueTimeDto.setIssueId(issue.getKey());
+                changeLogs.forEach(changeLog -> {
+                    changeLog.getItems().forEach(item -> {
+                        if ("status".equals(item.getField())) {
+                            if("Testing".equals(item.getToString())){
+                                issueTimeDto.setStartTime(changeLog.getCreated().getTime());
+                            }else if("Testing".equals(item.getFromString())){
+                                issueTimeDto.setEndTime(changeLog.getCreated().getTime());
+                                issueTimeDto.setName(changeLog.getAuthor().getName());
+                            }
+                        }
+                    });
+                });
+                testTimeData.forEach(testTimeDto -> {
+                    if(testTimeDto.getName().equals(issueTimeDto.getName())){
+                        testTimeDto.getTestTimeList().add(issueTimeDto);
+                    }
+                });
+            }
+        });
+        return testTimeData;
+    }
+
     public Map<String,List<String>> getTestCaseExecuteData(String startTime,String endTime) {
         String searchSql = "project in (" + projects + ") AND status = Closed AND resolution = 完成" +
                 " AND resolved >=" + startTime +
@@ -234,7 +277,11 @@ public class JiraServiceImpl implements JiraService {
                             issueDetail.getIssueLinks().forEach(issueLink -> {
                                 if (issueLink.getOutwardIssue() != null &&
                                     FieldType.TEST_LINK_ISSUE.equals(issueLink.getOutwardIssue().getIssueType().getId())) {
-                                    issueMap.get(changeLog.getAuthor().getName()).add(issueLink.getOutwardIssue().getKey());
+                                    if(issueMap.containsKey(changeLog.getAuthor().getName())) {
+                                        issueMap.get(changeLog.getAuthor().getName()).add(issueLink.getOutwardIssue().getKey());
+                                    }else{
+                                        issueMap.put(changeLog.getAuthor().getName(),new ArrayList<>());
+                                    }
                                 }
                             });
                         }
