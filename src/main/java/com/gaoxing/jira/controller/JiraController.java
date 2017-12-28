@@ -77,6 +77,8 @@ public class JiraController {
                 testerDto.setName(tester);
                 results.add(testerDto);
             }
+            //TODO 统计测试时间数据
+//            List<TestTimeDto> testTimeData =jiraService.getTestTimeData(startTime,endTime);
             //统计测试人员退回次数
             Map<String,List<String>> returnData=jiraService.getTesterReturnData(startTime,endTime);
             //统计测试用例
@@ -87,20 +89,22 @@ public class JiraController {
             Map<String,List<String>> onlineBugData=jiraService.getTesterOnlineBugData(startTime,endTime);
             //统计关联测试用例数据
             Map<String,List<String>> executeData=jiraService.getTestCaseExecuteData(startTime,endTime);
+
+
             //TODO 统计自动化测试用例
 
             //填充统计数据
             results.forEach(testerDto -> {
                 List<String> returnList = returnData.get(testerDto.getName());
                 if (returnList == null) {
-                    testerDto.setReturnTime(0);
+                    testerDto.setReturnCount(0);
                     testerDto.setReturnList(new ArrayList<>());
                 } else {
-                    testerDto.setReturnTime(returnList.size());
+                    testerDto.setReturnCount(returnList.size());
                     testerDto.setReturnList(returnList);
                 }
                 List<String> testCaseList = testCaseData.get(testerDto.getName());
-                if (returnList == null) {
+                if (testCaseList == null) {
                     testerDto.setTestCase(0);
                     testerDto.setTestCaseList(new ArrayList<>());
                 } else {
@@ -129,7 +133,7 @@ public class JiraController {
                     testerDto.setOnlineBugList(onlineBugList);
                 }
                 List<String> testCaseExecuteList = executeData.get(testerDto.getName());
-                testerDto.setTestCaseExecuteTime(testCaseExecuteList.size());
+                testerDto.setTestCaseExecuteCount(testCaseExecuteList.size());
                 testerDto.setTestCaseExecuteList(testCaseExecuteList);
             });
             response.setData(results);
