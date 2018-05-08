@@ -6,8 +6,8 @@ jira:
   projects: IOTBEDSIDE
 #  developers: weixiaokang
   developers: zhoushuyan,huangaoxin,ouyangbo,zengqinggui,zhengxiang,zhangyizhi,gongjunqing,wangbingfu,weixiaokang,luozheng
-  developersAndroid:
-  developersBackend:
+  developersAndroid: luying,shibing,pengchenwei,douyeliang,ruanyitai,mashoujun,jinsheng,zhangjin,wangzhonghao,wangdapeng
+  developersBackend: huminghu,liangfei,lijiaren,wangpengfei,caizhongheng,taoyemeng,fengyan,xufeiyang,zhuwenjie,caihong
   testers: wufei,zhangling,liufanghua,wujinpeng,zhouxinhui,qiupeiteng,hexueqin,chengjie
   testersJD:
   testProjects: IOTBEDSIDE

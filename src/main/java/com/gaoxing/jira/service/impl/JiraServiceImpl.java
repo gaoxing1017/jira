@@ -43,7 +43,7 @@ public class JiraServiceImpl implements JiraService {
                 " AND \"Story Points\" > 0" +
                 " AND 开发人员 in (" + developer + ")";
         try {
-            Issue.SearchResult storyResult = JiraUtil.getJiraClient().searchIssues(searchSql);
+            Issue.SearchResult storyResult = JiraUtil.getJiraClient().searchIssues(searchSql,FieldType.STORY_POINT+','+FieldType.SUBTASKS+','+FieldType.ISSUE_TYPE);
             developerDto.setIssues(storyResult.issues.parallelStream().map(e -> e.getKey()).collect(Collectors.toList()));
             double storyPoints = storyResult.issues.stream()
                     .mapToDouble(e -> Double.parseDouble(e.getField(FieldType.STORY_POINT).toString()))
@@ -83,7 +83,7 @@ public class JiraServiceImpl implements JiraService {
                 " ORDER BY priority DESC";
         try {
             //计算bug数量(普通、重要、线上)
-            Issue.SearchResult bugResult = JiraUtil.getJiraClient().searchIssues(searchSql);
+            Issue.SearchResult bugResult = JiraUtil.getJiraClient().searchIssues(searchSql,FieldType.PRIORITY);
             List<String> bugTasks = bugResult.issues.parallelStream().map(e -> e.getKey()).collect(Collectors.toList());
             developerDto.setBugs(bugTasks);
             developerDto.setBugCount(bugTasks.size());
@@ -118,7 +118,7 @@ public class JiraServiceImpl implements JiraService {
                 " AND 开发人员 in (" + developer + ")" +
                 " AND 退回次数 >= 1";
         try {
-            Issue.SearchResult returnIssues = JiraUtil.getJiraClient().searchIssues(searchSql);
+            Issue.SearchResult returnIssues = JiraUtil.getJiraClient().searchIssues(searchSql,FieldType.RETURN_TIME);
             List<String> returnList = returnIssues.issues.parallelStream().map(e -> e.getKey()).collect(Collectors.toList());
             Double returnTime = returnIssues.issues.parallelStream().mapToDouble(e -> Double.parseDouble(e.getField(FieldType.RETURN_TIME).toString())).sum();
             developerDto.setReturnList(returnList);
@@ -134,11 +134,11 @@ public class JiraServiceImpl implements JiraService {
                 " AND due <=" + endTime +
                 " AND 开发人员 in (" + developer + ")";
         try {
-            Issue.SearchResult delayIssueResult = JiraUtil.getJiraClient().searchIssues(searchSql);
-            List<Issue> delayIssues = delayIssueResult.issues.parallelStream()
-                    .filter(e -> (e.getResolutionDate().getTime() > (e.getDueDate().getTime())))
+            Issue.SearchResult delayIssueResult = JiraUtil.getJiraClient().searchIssues(searchSql,FieldType.RESOLUTION_DATE+','+FieldType.DUE_DATE+','+FieldType.REPORTER);
+            List<Issue> delayIssues = delayIssueResult.issues.stream()
+                    .filter(e -> (e.getResolutionDate()!=null&&(e.getResolutionDate().getTime() > (e.getDueDate().getTime()))))
                     .collect(Collectors.toList());
-            List<String> delayList = delayIssues.parallelStream().map(e -> e.getKey()).collect(Collectors.toList());
+            List<String> delayList = delayIssues.stream().map(e -> e.getKey()).collect(Collectors.toList());
 //            List<String> delay7days = delayIssues.parallelStream()
 //                    .filter(e -> (e.getResolutionDate().getTime() - (e.getDueDate().getTime()) > 7 * DateUtil.oneDay))
 //                    .map(e -> e.getKey())

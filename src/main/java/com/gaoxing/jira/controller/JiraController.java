@@ -29,6 +29,12 @@ public class JiraController {
     @Value("${jira.developers}")
     private String developers;
 
+    @Value("${jira.developersAndroid}")
+    private String androidDevelopers;
+
+    @Value("${jira.developersBackend}")
+    private String backendDevelopers;
+
     @Value("${jira.testers}")
     private String testers;
 
@@ -40,13 +46,27 @@ public class JiraController {
 
     @RequestMapping(value = "/v1/developer", method = RequestMethod.GET)
     public Callable<Response<List<DeveloperDto>> > getStoryPoint(@RequestParam String startTime,
-                                                                 @RequestParam String endTime) {
+                                                                 @RequestParam String endTime,
+                                                                 @RequestParam(required = false) Integer type) {
         return () -> {
 
             List<DeveloperDto> results = new ArrayList<>();
             Response<List<DeveloperDto>> response = new Response<>(ResponseStatus.SUCCESS, "执行成功", null);
 
-            for (String developer : developers.split(",")) {
+            String members = developers;
+            switch (type){
+                case 1:  //android端
+                    members = androidDevelopers;
+                    break;
+                case 2:  //服务端
+                    members = backendDevelopers;
+                    break;
+                case 0:
+                    //fall though
+                default: //徐汇
+                    break;
+            }
+            for (String developer : members.split(",")) {
                 DeveloperDto developerDto = new DeveloperDto();
                 developerDto.setSubTasks(new ArrayList<>());
                 developerDto.setName(developer);
