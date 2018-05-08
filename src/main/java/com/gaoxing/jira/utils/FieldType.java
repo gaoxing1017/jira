@@ -23,4 +23,6 @@ public class FieldType {
 
     public static String TEST_LINK_ISSUE = "11502";
 
+    public static String BUG_TYPE = "customfield_15900";
+
 }

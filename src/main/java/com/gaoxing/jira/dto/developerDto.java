@@ -22,6 +22,11 @@ public class DeveloperDto {
     Double storyPoints;
 
     /**
+     * bug所占故事点累计
+     */
+    Double bugStoryPoints;
+
+    /**
      * bug总数
      */
     Integer  bugCount;

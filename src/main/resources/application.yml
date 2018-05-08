@@ -3,11 +3,14 @@ server:
   port: ${port:8989}
 
 jira:
-  projects: RECON,HMS,HMSMS,PDS,YYDS,PLUGIN
-  #developers: weixiaokang
-  developers: zhoushuyan,huangaoxin,ouyangbo,zengqinggui,hanchonglin,zhengxiang,huangyibo,zhangyizhi,zhudiyang,gongjunqing,zhuminghao,wangbingfu,weixiaokang,wuqingqing,duxin,pandongdong,wangjing,huanghao
-  testers: zhangchen_dev,wufei,zhangling,liufanghua
-  testProjects: FJZLTEST
+  projects: IOTBEDSIDE
+#  developers: weixiaokang
+  developers: zhoushuyan,huangaoxin,ouyangbo,zengqinggui,zhengxiang,zhangyizhi,gongjunqing,wangbingfu,weixiaokang,luozheng
+  developersAndroid:
+  developersBackend:
+  testers: wufei,zhangling,liufanghua,wujinpeng,zhouxinhui,qiupeiteng,hexueqin,chengjie
+  testersJD:
+  testProjects: IOTBEDSIDE
 
 spring:
   mvc:

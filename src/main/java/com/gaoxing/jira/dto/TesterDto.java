@@ -2,6 +2,7 @@ package com.gaoxing.jira.dto;
 
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,9 +33,29 @@ public class TesterDto {
     Integer returnCount;
 
     /**
-     * 线上bug数
+     * feature缺陷数
+     */
+    Integer featureBugCount;
+
+    /**
+     * dev缺陷数
+     */
+    Integer devBugCount;
+
+    /**
+     * test缺陷数
+     */
+    Integer testBugCount;
+
+    /**
+     * 线上缺陷数
      */
     Integer onlineBugCount;
+
+    /**
+     * 其他bug数
+     */
+    Integer otherBugCount;
 
     /**
      * 发现bug数
@@ -60,7 +81,22 @@ public class TesterDto {
      * bug列表
      */
     List<String> bugList;
-
+    /**
+     * feature缺陷列表
+     */
+    List<String> featureBugList;
+    /**
+     * dev缺陷列表
+     */
+    List<String> devBugList;
+    /**
+     * test缺陷列表
+     */
+    List<String> testBugList;
+    /**
+     * 其他bug列表
+     */
+    List<String> otherBugList;
     /**
      * 线上bug列表
      */
@@ -81,10 +117,23 @@ public class TesterDto {
      */
     List<String> testCaseExecuteList;
 
-
     /**
      * 测试时间明细
      */
     List<IssueTimeDto> testTimeList;
+
+    public TesterDto(){
+        findBugCount = 0;
+        featureBugCount =0;
+        devBugCount =0;
+        testBugCount =0;
+        onlineBugCount =0;
+        bugList =new ArrayList<>();
+        featureBugList =new ArrayList<>();
+        devBugList =new ArrayList<>();
+        testBugList =new ArrayList<>();
+        onlineBugList =new ArrayList<>();
+        otherBugList = new ArrayList<>();
+    }
 
 }

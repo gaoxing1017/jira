@@ -1,5 +1,6 @@
 package com.gaoxing.jira.service;
 
+import com.gaoxing.jira.dto.BugDto;
 import com.gaoxing.jira.dto.DeveloperDto;
 import com.gaoxing.jira.dto.TestTimeDto;
 
@@ -75,7 +76,10 @@ public interface JiraService {
      * @param endTime
      * @return
      */
-    Map<String, List<String>> getBugData(String startTime, String endTime);
+//    Map<String, List<String>> getBugData(String startTime, String endTime);
+
+
+    Map<String, BugDto> getBugData(String startTime, String endTime);
     /**
      * 获取测试人员线上bug数
      * @param startTime
